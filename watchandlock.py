@@ -37,9 +37,10 @@ def directory_path_type(value):
 
 def regexpr_type(value):
     try:
-        return re.compile(value)
+        expr = re.compile(value)
     except re.error:
         raise ArgumentError('Must be a valid regular expression')
+    return expr
 
 
 def non_negative_float_type(value):
@@ -102,7 +103,7 @@ def lock_and_wait(path, action_name, timeout=5.0, delay=2.0):
     lock the file, and wait for delay seconds
     """
     LOG.info('%s %s: locking and waiting %0.1f seconds', path, action_name, delay)
-    lock = LockFile(path, timeout=timeout)
+    lock = FileLock(path, timeout=timeout)
     with lock:
         time.sleep(delay)
     LOG.info('%s: unlocked', path)
@@ -185,7 +186,8 @@ def main_guts(prog_name, args):
     handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s: %(message)s'))
     LOG.addHandler(handler)
     LOG.setLevel(loglevel)
-    LOG.debug("%r", opts)
+    LOG.debug('arguments %r', opts)
+    LOG.info('this software uses Windows blocking APIs: use Ctrl+Break to terminate')
 
     watch_and_take_action(opts.path, opts.pattern, opts.action, opts.timeout, opts.delay)
 
