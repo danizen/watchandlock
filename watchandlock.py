@@ -97,6 +97,29 @@ def open_and_wait(path, action_name, timeout=5.0, delay=2.0):
     LOG.info('%s: closed', path)
 
 
+def sysopen_and_wait(path, action_name, timeout=5.0, delay=2.0):
+    """
+    Open the file using windows System APIs and set file disposition so that it may be deleted.
+    """
+    LOG.info('%s %s: opening (internals) and waiting for %0.1f seconds', path, action_name, delay)
+    hFile = None
+    try:
+        # Open/Create directory with Windows Base APIs
+        hFile = win32file.CreateFile(
+            path,
+            win32con.GENERIC_READ,
+            win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE | win32con.FILE_SHARE_DELETE,
+            None,
+            win32con.OPEN_EXISTING,
+            win32con.FILE_FLAG_BACKUP_SEMANTICS,
+            None
+        )
+
+    finally:
+        if hFile is not None:
+            win32file.CloseHandle(hFile)
+
+
 
 def lock_and_wait(path, action_name, timeout=5.0, delay=2.0):
     """
@@ -111,6 +134,7 @@ def lock_and_wait(path, action_name, timeout=5.0, delay=2.0):
 
 MY_ACTIONS = {
     'open': open_and_wait,
+    'sysopen': sysopen_and_wait,
     'lock': lock_and_wait,
     'logonly': log_only,
 }
